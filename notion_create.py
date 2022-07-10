@@ -295,8 +295,14 @@ class tweet_database():
       print(e)
     #pprint(response.json())
     time.sleep(0.3)
-    print(f'{block_id }のデータベースに新しいページを作成しました')
-    return response.json()["id"]
+    try:
+      response_id = response.json()["id"]
+      print(f'{block_id }のデータベースに新しいページを作成しました')
+    except:
+      response_id = None
+      print("アップロードに失敗しました")
+      pprint(response)
+    return response_id
 
 
 def database_page():

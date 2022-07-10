@@ -41,15 +41,19 @@ def main():
     tweet_list = tweet_search.search(trend)
     for tweet in tweet_list:
       inline_page = notion_create.tweet_database.database_page(tweet_pageid,tweet)
-      if tweet["medias"]:
-        for media_url in tweet["medias"]:
-          if media_url["type"] == "video":
-            notion_create.block.Video(inline_page,media_url["URL"])
-          else:
-            notion_create.block.image(inline_page,media_url["URL"])
-      for i in range(3):
-        print(f"{3-i}秒待機")
-        time.sleep(1)
+      if inline_page:
+        if tweet["medias"]:
+          print(tweet["medias"])
+          for media_url in tweet["medias"]:
+            if media_url["type"] == "video":
+              notion_create.block.Video(inline_page,media_url["URL"])
+            else:
+              notion_create.block.image(inline_page,media_url["URL"])
+      else:
+        continue
+
+      print("1.2秒待機")
+      time.sleep(1.2)
       
     #空白
     notion_create.block.text(list_pageid,"")

@@ -1,21 +1,22 @@
 import tweepy
 import API_key
+import time
 
 def search(search_word=None):
-  # 検索条件の設定（リストで渡せば複数指定できる）
-  search = f"{search_word}　-filter:retweets"
-  tweet_max = 50
+
+  while True:
+    try:
+      # 検索条件の設定（リストで渡せば複数指定できる）
+      search = f"{search_word}　-filter:retweets"
+      tweet_max = 50
+       
+      # ツイートを取得してtweetsという変数に代入
+      tweets = tweepy.Cursor(API_key.api.search_tweets, q=search, lang="ja").items(tweet_max)
+      break
+    except:
+      print("ツイートの取得に失敗しました。再度リクエストします")
+      time.sleep(5)
    
-  # ツイートを取得してtweetsという変数に代入
-  tweets = tweepy.Cursor(API_key.api.search_tweets, q=search, lang="ja").items(tweet_max)
-   
-  # 一度リストにしてから使う
-  # tweets = list(tweets)
-  # f = open('text.txt', 'w')
-  
-  # f.write(str(list(tweets)))
-  
-  # f.close()
   # 必要な情報のみを格納する箱(=リスト)を作る
   tweet_data = {}
   tweet_datas = []
@@ -59,16 +60,36 @@ def search(search_word=None):
     except:
       tweet_data["banner"]= "https://img.icons8.com/ios/250/000000/twitter.png"
     #media保存
-    if "media" in tweet.entities.keys():
-      media = {}    
-      medias = []
-      for media_url in tweet.entities["media"]:
-        media["URL"] = media_url["media_url_https"]
-        media["type"] = media_url["type"]
-        medias.append(media)
-        media = {} 
-      tweet_data["medias"] = medias
-    else:
+    try:
+      if "media" in tweet.extended_entities.keys():
+        media = {}    
+        medias = []
+        for media_url in tweet.extended_entities["media"]:
+          media["type"] = media_url["type"]
+          if media["type"] =="video":
+            try:
+              video_bitrate = 0
+              for video_url in media_url["video_info"]["variants"]:
+                if "bitrate" in video_url.keys():
+                  
+                  if video_url["bitrate"] > video_bitrate:
+                    media["URL"] = video_url["url"]
+                    video_bitrate = video_url["bitrate"]
+
+              if video_bitrate == 0:
+                tweet_data["medias"] = []
+                break
+            except:
+              tweet_data["medias"] = []
+              break
+          else:
+            media["URL"] = media_url["media_url_https"]
+          medias.append(media)
+          media = {} 
+        tweet_data["medias"] = medias
+      else:
+        tweet_data["medias"] = []
+    except:
       tweet_data["medias"] = []
     
     tweet_datas.append(tweet_data)
